@@ -1,0 +1,104 @@
+/* =====================================================================
+   Núcleo comum das landing pages (copiado para cada pasta por sync.py).
+   Só o que DEVE ser igual em todas: reset, utilitários de animação,
+   barra de ação no celular, rodapé com créditos e acessibilidade.
+   Todo o visual da página fica no page.css de cada uma.
+   ===================================================================== */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; -webkit-font-smoothing: antialiased; }
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+p { margin: 0 0 1em; }
+h1, h2, h3 { margin: 0 0 0.5em; }
+.wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Entrada ao rolar */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.reveal.is-visible { opacity: 1; transform: none; }
+.stagger > * { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: calc(var(--i, 0) * 110ms); }
+.stagger.is-visible > * { opacity: 1; transform: none; }
+
+/* Menu mobile (o visual do botão fica no page.css). !important de propósito: os page.css
+   declaram ".nav { display: flex }" depois deste arquivo e deixavam o menu sempre aberto. */
+@media (max-width: 760px) {
+  .nav:not(.nav--open) { display: none !important; }
+  .nav.nav--open { display: flex !important; }
+}
+
+/* Barra fixa de ação no celular */
+.cta-bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.5);
+  transform: translateY(150%);
+  transition: transform 0.3s ease;
+}
+.cta-bar.is-visible { transform: none; }
+@media (max-width: 760px) { .cta-bar { display: flex; } }
+
+/* ---------- Rodapé comum ---------- */
+.lp-footer { padding: 52px 0 28px; font-size: 0.92rem; }
+.lp-footer a { text-decoration: none; }
+.lp-footer__grid { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.lp-footer__brand { display: flex; flex-direction: column; gap: 2px; }
+.lp-footer__brand strong { font-size: 1.4rem; }
+.lp-footer__social { display: flex; gap: 12px; }
+.social {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid currentColor;
+  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.social svg { width: 22px; height: 22px; }
+.social:hover { transform: translateY(-4px) rotate(-6deg); color: #fff; border-color: transparent; }
+.social--instagram:hover { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285aeb 90%); box-shadow: 0 12px 24px -10px rgba(214, 36, 159, 0.8); }
+.social--whatsapp:hover { background: #1fa855; box-shadow: 0 12px 24px -10px rgba(31, 168, 85, 0.8); }
+.social--facebook:hover { background: #1877f2; box-shadow: 0 12px 24px -10px rgba(24, 119, 242, 0.8); }
+.social--phone:hover, .social--calendar:hover { background: #444; }
+.lp-footer__bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(127, 127, 127, 0.25);
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+.credits { display: inline-flex; align-items: center; gap: 6px; }
+.credits strong { background: linear-gradient(currentColor, currentColor) left bottom / 0 2px no-repeat; transition: background-size 0.3s ease; }
+.credits:hover strong { background-size: 100% 2px; }
+.credits svg { width: 14px; height: 14px; transition: transform 0.2s ease; }
+.credits:hover svg { transform: translate(2px, -2px); }
+@media (max-width: 760px) { .lp-footer { padding-bottom: 100px; } }
+
+/* ---------- Quem pediu menos movimento no sistema ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0s !important;
+  }
+  .reveal, .stagger > * { opacity: 1; transform: none; }
+}
