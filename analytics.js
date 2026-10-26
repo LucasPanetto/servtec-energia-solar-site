@@ -1,18 +1,32 @@
 /* =====================================================================
-   Métricas da landing page — Google Analytics 4
+   Métricas da landing page — Google Analytics 4 + Pixel da Meta
    ---------------------------------------------------------------------
-   ID em Admin → Fluxos de dados → Web → "ID da métrica" (G-XXXXXXXXXX).
-   Com o ID vazio, nada é carregado e o aviso de cookies não aparece.
+   GA4: Admin → Fluxos de dados → Web → "ID da métrica" (G-XXXXXXXXXX).
+   Pixel da Meta: Gerenciador de Eventos → Fontes de dados → ID do pixel (15–16 dígitos).
+   Com os IDs vazios, nada é carregado e o aviso de cookies não aparece.
+   No modo PRÉVIA (data-preview no <html>) a medição fica sempre desligada.
 
-   GA4 carrega assim que a página abre. O aviso de cookies continua:
-   "Recusar" desliga o GA4 dali em diante (e nas próximas visitas); "Aceitar" só fecha o aviso.
+   Carregam assim que a página abre (pedido do Lucas, 19/10/2026). O aviso de cookies continua:
+   "Recusar" desliga GA4 e Pixel dali em diante (e nas próximas visitas); "Aceitar" só fecha o aviso.
+
+   Eventos padrão do Pixel (pedido da Servtec, 26/10/2026):
+   - Contact → clique em qualquer botão/link de WhatsApp
+   - Lead    → envio do formulário de orçamento (topo) e do orçamento pelo simulador
    ===================================================================== */
 (() => {
   const CONFIG = {
-    GA4_ID: 'G-GE0T0Q3RQ0', // propriedade "Site Servtec Energia Solar"
+    GA4_ID: 'G-GE0T0Q3RQ0', // propriedade "Site Servtec Energia Solar" (19/10/2026)
+    META_PIXEL_ID: '2131489540735596', // Pixel da Servtec (26/10/2026)
   };
   const KEY = 'servtec-consent';
-  const enabled = CONFIG.GA4_ID && !document.documentElement.hasAttribute('data-preview');
+  const enabled = (CONFIG.GA4_ID || CONFIG.META_PIXEL_ID) && !document.documentElement.hasAttribute('data-preview');
+
+  // Evento da página → evento padrão do Pixel
+  const PIXEL_EVENTS = {
+    whatsapp_clique: 'Contact',
+    lead_enviado: 'Lead',
+    simulacao_orcamento: 'Lead',
+  };
 
   // Eventos: a página chama LPtrack('nome', {...}). Sem consentimento ou sem IDs, vira no-op.
   window.dataLayer = window.dataLayer || [];
@@ -21,17 +35,22 @@
   window.LPtrack = (name, params = {}) => {
     if (!active) return false;
     if (CONFIG.GA4_ID) gtag('event', name, { ...params, transport_type: 'beacon' });
+    if (CONFIG.META_PIXEL_ID && window.fbq && PIXEL_EVENTS[name]) {
+      window.fbq('track', PIXEL_EVENTS[name], { content_name: name, ...(params.origem ? { origem: params.origem } : {}) });
+    }
     return true;
   };
+  // Tempo para o evento sair antes de a página trocar para o WhatsApp (usado pelo page.js)
+  window.LPnavDelay = () => (active && CONFIG.META_PIXEL_ID ? 350 : 0);
   if (!enabled) return;
 
   const read = () => { try { return localStorage.getItem(KEY); } catch (e) { return null; } };
   const save = (v) => { try { localStorage.setItem(KEY, v); } catch (e) { /* sem armazenamento: pergunta de novo na próxima visita */ } };
 
   function loadGA() {
-    if (active || !CONFIG.GA4_ID) return;
+    if (active) return;
     active = true;
-    {
+    if (CONFIG.GA4_ID) {
       const s = document.createElement('script');
       s.async = true;
       s.src = `https://www.googletagmanager.com/gtag/js?id=${CONFIG.GA4_ID}`;
@@ -39,6 +58,21 @@
       gtag('js', new Date());
       gtag('config', CONFIG.GA4_ID);
     }
+    if (CONFIG.META_PIXEL_ID) loadPixel();
+  }
+
+  // Código base oficial do Pixel da Meta (fbevents.js) + PageView
+  function loadPixel() {
+    if (window.fbq) return;
+    const n = window.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+    if (!window._fbq) window._fbq = n;
+    n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(s);
+    window.fbq('init', CONFIG.META_PIXEL_ID);
+    window.fbq('track', 'PageView');
   }
 
   // ---- Aviso de cookies (só aparece enquanto a pessoa não escolheu) ----
@@ -60,16 +94,17 @@
     el.className = 'lp-consent';
     el.setAttribute('role', 'region');
     el.setAttribute('aria-label', 'Aviso de cookies');
-    el.innerHTML = '<p>Usamos cookies para medir as visitas e melhorar o site. Nada é usado para outro fim.</p>'
+    el.innerHTML = '<p>Usamos cookies para medir as visitas e os resultados dos nossos anúncios e melhorar o site.</p>'
       + '<div><button type="button" class="no">Recusar</button><button type="button" class="ok">Aceitar</button></div>';
     el.querySelector('.ok').addEventListener('click', () => { save('yes'); el.remove(); });
     el.querySelector('.no').addEventListener('click', () => { save('no'); el.remove(); optOut(); });
     document.body.appendChild(el);
   }
 
-  // Recusar: o GA4 para de coletar (bloqueio oficial do Google) e a página não envia mais eventos
+  // Recusar: GA4 e Pixel param de coletar (bloqueios oficiais do Google e da Meta) e a página não envia mais eventos
   function optOut() {
     if (CONFIG.GA4_ID) window[`ga-disable-${CONFIG.GA4_ID}`] = true;
+    if (window.fbq) window.fbq('consent', 'revoke');
     active = false;
   }
 

@@ -105,7 +105,9 @@ lead.addEventListener('submit', (e) => {
   // Mesma aba: nova aba é bloqueada em vários navegadores (apps do Instagram/Facebook, alguns celulares)
   // e às vezes sem aviso. No celular, o link wa.me passa direto para o app do WhatsApp.
   track('lead_enviado', { formulario: 'topo', origem: d.get('origem') || 'formulario', conta: billMode() });
-  window.location.href = LP.whatsapp(NUMBER, msg);
+  const go = () => { window.location.href = LP.whatsapp(NUMBER, msg); };
+  const wait = window.LPnavDelay ? window.LPnavDelay() : 0;
+  wait ? setTimeout(go, wait) : go();
 });
 lead.addEventListener('input', () => check(false));
 lead.addEventListener('change', () => check(false));
@@ -242,7 +244,9 @@ simForm.addEventListener('submit', (e) => {
     + `Instalação em: ${d.get('estrutura').toLowerCase()}.\n`
     + 'Quero o orçamento exato.';
   track('simulacao_orcamento', { kwp: Number(sim.kwp.toFixed(1)), regiao: sim.zone, modo: simMode() });
-  window.location.href = LP.whatsapp(NUMBER, msg);
+  const go = () => { window.location.href = LP.whatsapp(NUMBER, msg); };
+  const wait = window.LPnavDelay ? window.LPnavDelay() : 0;
+  wait ? setTimeout(go, wait) : go();
 });
 simForm.addEventListener('input', () => checkSim(false));
 simForm.addEventListener('change', () => checkSim(false));
