@@ -92,16 +92,16 @@ lead.addEventListener('submit', (e) => {
   if (step === 1) { goStep(2); return; }
   const d = new FormData(lead);
   const m = billMode();
-  const gasto = m === 'foto' ? 'vou enviar a foto da conta aqui na conversa.'
-    : m === 'kWh' ? `consumo médio de ${bill.value.trim()} kWh/mês.`
-    : `conta média de R$ ${bill.value.trim()} por mês.`;
-  const msg = `Olá! Me chamo ${d.get('nome').trim()} e vim pelo site da Servtec.\n`
-    + `Tenho interesse em energia solar para um imóvel ${d.get('imovel').toLowerCase()}, `
-    + `com instalação em: ${d.get('estrutura').toLowerCase()}.\n`
-    + `Endereço: ${d.get('endereco').trim()}\n`
-    + `Conta de luz: ${gasto}\n`
-    + `Prazo: ${d.get('urgencia')}`
-    + (d.get('origem') ? `\n(Vim pelo botão: ${d.get('origem')})` : '');
+  const gasto = m === 'foto' ? 'Vai enviar a foto da conta nesta conversa'
+    : m === 'kWh' ? `${bill.value.trim()} kWh/mês`
+    : `R$ ${bill.value.trim()}/mês`;
+  const msg = '✅ Novo lead site\n\n'
+    + `Nome: ${d.get('nome').trim()}\n`
+    + `Endereço da instalação: ${d.get('endereco').trim()}\n`
+    + `Conta de energia: ${gasto}\n`
+    + `Tipo de imóvel: ${d.get('imovel')}\n`
+    + `Instalação em: ${d.get('estrutura')}\n`
+    + `Prioridade de projeto: ${d.get('urgencia')}`;
   // Mesma aba: nova aba é bloqueada em vários navegadores (apps do Instagram/Facebook, alguns celulares)
   // e às vezes sem aviso. No celular, o link wa.me passa direto para o app do WhatsApp.
   track('lead_enviado', { formulario: 'topo', origem: d.get('origem') || 'formulario', conta: billMode() });
@@ -236,13 +236,15 @@ simForm.addEventListener('submit', (e) => {
   const firstBad = checkSim(true);
   if (firstBad) { firstBad.focus(); return; }
   const d = new FormData(simForm);
-  const msg = `Olá! Me chamo ${d.get('nome').trim()} e fiz a simulação no site da Servtec.\n`
-    + `Simulação: ${simConta()}, região ${sim.zone}.\n`
-    + `Sistema sugerido: ~${fmt(sim.kwp, 1)} kWp (${sim.panels} placas de ${SIM.panelWp} Wp).\n`
-    + `Economia estimada: ~R$ ${fmt(Math.round(sim.saveM))}/mês.\n`
-    + `Endereço: ${d.get('endereco').trim()}\n`
-    + `Instalação em: ${d.get('estrutura').toLowerCase()}.\n`
-    + 'Quero o orçamento exato.';
+  const msg = '✅ Novo lead site\n\n'
+    + `Nome: ${d.get('nome').trim()}\n`
+    + `Endereço da instalação: ${d.get('endereco').trim()}\n`
+    + `Conta de energia: ${simMode() === 'rs' ? `R$ ${fmt(sim.v)}/mês` : `${fmt(sim.v)} kWh/mês`}\n`
+    + `Região: ${sim.zone}\n`
+    + `Instalação em: ${d.get('estrutura')}\n\n`
+    + 'Resultado da simulação:\n'
+    + `Sistema sugerido: ~${fmt(sim.kwp, 1)} kWp (${sim.panels} placas de ${SIM.panelWp} Wp)\n`
+    + `Economia estimada: ~R$ ${fmt(Math.round(sim.saveM))}/mês`;
   track('simulacao_orcamento', { kwp: Number(sim.kwp.toFixed(1)), regiao: sim.zone, modo: simMode() });
   const go = () => { window.location.href = LP.whatsapp(NUMBER, msg); };
   const wait = window.LPnavDelay ? window.LPnavDelay() : 0;
